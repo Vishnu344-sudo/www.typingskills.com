@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VishnuTyping - Improve Your Typing Skills</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 700px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .paragraph-container {
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgb(0 0 0 / 0.1);
+    }
+    .paragraph-text {
+      font-size: 18px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      resize: none;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .timer {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #007BFF;
+    }
+    button {
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+    #results {
+      margin-top: 20px;
+      background: #e9ffe9;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>VishnuTyping - Improve Your Typing Skills</h1>
+
+  <div id="typingSection" class="paragraph-container">
+    <div class="timer" id="timer">Time Left: 60s</div>
+    <div class="paragraph-text" id="paragraph"></div>
+    <textarea id="inputArea" placeholder="Start typing here..." spellcheck="false" autocomplete="off"></textarea>
+    <br/>
+    <button id="nextBtn" disabled>Next Paragraph</button>
+  </div>
+
+  <div id="results">
+    <h2>Typing Results</h2>
+    <div id="resultsContent"></div>
+  </div>
+
+  <script>
+    const paragraphs = [
+      "Customer service is not just about solving problems. It is about understanding the customer's needs and making them feel valued. A good representative listens carefully, responds politely, and ensures that the customer leaves the conversation satisfied.",
+      "Time management is one of the most important skills for success in a fast-paced work environment. Prioritizing tasks, setting goals, and avoiding distractions can greatly improve productivity and reduce stress."
+    ];
+
+    let currentIndex = 0;
+    let timeLeft = 60;
+    let timerId;
+    const timerElement = document.getElementById('timer');
+    const paragraphElement = document.getElementById('paragraph');
+    const inputArea = document.getElementById('inputArea');
+    const nextBtn = document.getElementById('nextBtn');
+    const resultsSection = document.getElementById('results');
+    const resultsContent = document.getElementById('resultsContent');
+
+    const resultsData = [];
+
+    function startTimer() {
+      timeLeft = 60;
+      timerElement.textContent = `Time Left: ${timeLeft}s`;
+      timerId = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = `Time Left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          finishParagraph();
+        }
+      }, 1000);
+    }
+
+    function calculateResults(reference, typed) {
+      const totalTyped = typed.length;
+
+      // Count correct characters only up to the length of typed input
+      let correctChars = 0;
+      for (let i = 0; i < totalTyped; i++) {
+        if (reference[i] === typed[i]) {
+          correctChars++;
+        }
+      }
+
+      // Accuracy based on correct chars out of total typed
+      const accuracy = totalTyped === 0 ? 0 : ((correctChars / totalTyped) * 100).toFixed(2);
+
+      // WPM based on total typed chars
+      const timeMinutes = 1; // 1 minute per paragraph
+      const wpm = (totalTyped / 5 / timeMinutes).toFixed(2);
+
+      return { wpm, accuracy };
+    }
+
+    function loadParagraph(index) {
+      paragraphElement.textContent = paragraphs[index];
+      inputArea.value = "";
+      inputArea.disabled = false;
+      inputArea.focus();
+      nextBtn.disabled = true;
+      resultsSection.style.display = 'none';
+      document.getElementById('typingSection').style.display = 'block';
+      startTimer();
+    }
+
+    function finishParagraph() {
+      inputArea.disabled = true;
+      nextBtn.disabled = false;
+      clearInterval(timerId);
+
+      const typedText = inputArea.value;
+      const referenceText = paragraphs[currentIndex];
+      const { wpm, accuracy } = calculateResults(referenceText, typedText);
+
+      resultsData.push({
+        paragraph: currentIndex + 1,
+        wpm,
+        accuracy
+      });
+    }
+
+    nextBtn.addEventListener('click', () => {
+      currentIndex++;
+      if (currentIndex < paragraphs.length) {
+        loadParagraph(currentIndex);
+      } else {
+        showResults();
+      }
+    });
+
+    inputArea.addEventListener('input', () => {
+      if (inputArea.value.trim().length > 0) {
+        nextBtn.disabled = false;
+      } else {
+        nextBtn.disabled = true;
+      }
+    });
+
+    function showResults() {
+      document.getElementById('typingSection').style.display = 'none';
+      resultsSection.style.display = 'block';
+
+      let html = "<ul>";
+      resultsData.forEach(result => {
+        html += `<li>Paragraph ${result.paragraph}: Typing Speed = ${result.wpm} WPM, Accuracy = ${result.accuracy}%</li>`;
+      });
+      html += "</ul>";
+      resultsContent.innerHTML = html;
+    }
+
+    // Start the first paragraph on page load
+    loadParagraph(currentIndex);
+  </script>
+</body>
+</html>
